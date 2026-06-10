@@ -1,3 +1,12 @@
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => console.log('Service worker registered successfully', reg))
+      .catch((err) => console.error('Service worker registration failed:', err));
+  });
+}
+
 // Socket connection
 const socket = io();
 
