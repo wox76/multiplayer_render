@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Arena | Sparatutto Multiplayer</title>
+  <meta name="description" content="Entra in Quantum Arena, uno sparatutto spaziale multiplayer 2D in tempo reale, frenetico e ricco di azione.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="client.js" defer></script>
+</head>
+<body>
+
+  <!-- Landing / Login Screen -->
+  <div id="login-screen" class="screen-overlay">
+    <div class="glow-container">
+      <div class="login-card">
+        <div class="logo">
+          <span class="logo-light">QUANTUM</span>
+          <span class="logo-neon">ARENA</span>
+        </div>
+        <p class="subtitle">Pilota la tua nave spaziale e combatti contro giocatori in tempo reale</p>
+        
+        <form id="login-form">
+          <div class="input-group">
+            <input type="text" id="username-input" placeholder="Inserisci il tuo nickname" maxlength="15" required autocomplete="off">
+            <span class="bar"></span>
+          </div>
+          
+          <button type="submit" id="join-btn" class="btn-glow">
+            <span>ENTRA NELL'ARENA</span>
+          </button>
+        </form>
+
+        <div class="controls-guide">
+          <h3>Comandi di Gioco:</h3>
+          <div class="keys">
+            <div class="key-row">
+              <span class="key">W</span>
+            </div>
+            <div class="key-row">
+              <span class="key">A</span>
+              <span class="key">S</span>
+              <span class="key">D</span>
+              <span class="key-desc">Movimento</span>
+            </div>
+            <div class="key-row space-row">
+              <span class="key spacekey">SPAZIO</span>
+              <span class="key-desc">Spara Proiettili</span>
+            </div>
+            <div class="key-row mouse-row">
+              <span class="mouse-icon">🖱️</span>
+              <span class="key-desc">Mira con il Cursore</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD Interface -->
+  <div id="hud" class="hidden">
+    <!-- Top Left: Self Info -->
+    <div class="hud-panel player-panel">
+      <div class="player-header">
+        <span id="hud-player-name" class="glow-text">Soldier</span>
+      </div>
+      <div class="health-container">
+        <div class="health-label">INTEGRITÀ SCAFO</div>
+        <div class="health-bar-bg">
+          <div id="health-bar" class="health-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Right: Leaderboard -->
+    <div class="hud-panel leaderboard-panel">
+      <div class="panel-header">CLASSIFICA</div>
+      <ol id="leaderboard-list">
+        <!-- populated dynamically -->
+      </ol>
+    </div>
+
+    <!-- Bottom Left: Kills/Stats -->
+    <div class="hud-panel stats-panel">
+      <div class="stat-item">
+        <span class="stat-label">UCCISIONI:</span>
+        <span id="score-counter" class="stat-value text-neon">0</span>
+      </div>
+    </div>
+
+    <!-- Kill Notification Feed -->
+    <div id="kill-feed"></div>
+
+    <!-- Respawn overlay -->
+    <div id="respawn-screen" class="screen-overlay hidden">
+      <div class="respawn-card">
+        <h2 class="text-danger">NAVE DISTRUTTA!</h2>
+        <p>Rigenerazione in corso...</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
