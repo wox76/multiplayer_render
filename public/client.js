@@ -156,6 +156,18 @@ loginForm.addEventListener('submit', (e) => {
     hud.classList.remove('hidden');
     hudPlayerName.textContent = nickname;
     resizeCanvas();
+    
+    // Attiva la modalità a tutto schermo (Fullscreen)
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+      docEl.requestFullscreen().catch(err => console.log("Errore Fullscreen:", err));
+    } else if (docEl.mozRequestFullScreen) { // Firefox
+      docEl.mozRequestFullScreen();
+    } else if (docEl.webkitRequestFullscreen) { // Chrome, Safari, Opera
+      docEl.webkitRequestFullscreen();
+    } else if (docEl.msRequestFullscreen) { // IE/Edge
+      docEl.msRequestFullscreen();
+    }
   }
 });
 
