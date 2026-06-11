@@ -108,7 +108,7 @@ function maintainFuelCanisters() {
       x: pos.x,
       y: pos.y,
       type: 'fuel',
-      radius: 15
+      radius: 24
     });
   }
 }
@@ -131,7 +131,7 @@ function rollItemDrop(x, y) {
       x: x,
       y: y,
       type: type,
-      radius: 15
+      radius: 24
     });
   }
 }
@@ -484,13 +484,6 @@ setInterval(() => {
           playerId: 'asteroid',
           damage: 0
         });
-
-        // Award player score
-        const shooter = players[proj.ownerId];
-        if (shooter) {
-          shooter.score += 1;
-          checkScoreReset(proj.ownerId);
-        }
 
         asteroids.splice(j, 1);
         projectiles.splice(i, 1);

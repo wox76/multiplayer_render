@@ -513,37 +513,60 @@ function render() {
     const ry = item.y - camera.y;
 
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(rx, ry, item.radius, 0, Math.PI * 2);
-
+    
     let color = '#ffae00'; // fuel canister
-    let label = 'F';
+    let label = 'FUEL';
 
     if (item.type === 'pw_shield') {
       color = '#00f0ff';
-      label = 'S';
+      label = 'SHIELD';
     } else if (item.type === 'pw_triple') {
       color = '#bd00ff';
-      label = 'T';
+      label = 'TRIPLE';
     } else if (item.type === 'pw_bomb') {
       color = '#ff3131';
-      label = 'B';
+      label = 'BOMB';
     }
 
-    ctx.fillStyle = 'rgba(10, 10, 20, 0.8)';
+    // Outer double neon pulse ring
+    const pulseRadius = item.radius + 6 + Math.sin(Date.now() * 0.008) * 3;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.shadowBlur = 12;
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 25;
     ctx.shadowColor = color;
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath();
+    ctx.arc(rx, ry, pulseRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Core item capsule
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = 'rgba(10, 10, 20, 0.9)';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(rx, ry, item.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Draw inner symbol
-    ctx.font = 'bold 11px "Orbitron", sans-serif';
-    ctx.fillStyle = color;
+    // Colored glowing border
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3.5;
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = color;
+    ctx.beginPath();
+    ctx.arc(rx, ry, item.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Bold text inside the neon capsule
+    ctx.font = 'bold 9px "Orbitron", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, rx, ry);
+
     ctx.restore();
   });
 
