@@ -20,27 +20,40 @@ const loginForm = document.getElementById('login-form');
 const usernameInput = document.getElementById('username-input');
 const hud = document.getElementById('hud');
 const healthBar = document.getElementById('health-bar');
+const fuelBar = document.getElementById('fuel-bar');
 const scoreCounter = document.getElementById('score-counter');
 const leaderboardList = document.getElementById('leaderboard-list');
 const killFeed = document.getElementById('kill-feed');
 const respawnScreen = document.getElementById('respawn-screen');
 const hudPlayerName = document.getElementById('hud-player-name');
 
+// Powerup Badges
+const badgeShield = document.getElementById('badge-shield');
+const badgeTriple = document.getElementById('badge-triple');
+const badgeBomb = document.getElementById('badge-bomb');
+const bombCountVal = document.getElementById('bomb-count-val');
+
+// Countdown Overlay
+const countdownScreen = document.getElementById('countdown-screen');
+const countdownAnnouncement = document.getElementById('countdown-announcement');
+const countdownNumber = document.getElementById('countdown-number');
+
 // Game constants and state variables
 let mapSize = 2500;
 let localPlayerId = null;
 let currentPlayers = [];
 let currentProjectiles = [];
+let currentAsteroids = [];
+let currentItems = [];
+let currentBombs = [];
+let winnerName = "";
 
 // Camera
 const camera = { x: 0, y: 0 };
 
-// Controls state
-const keys = { w: false, a: false, s: false, d: false };
+// Controls state (Asteroids Style)
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
 let lastKeysState = { ...keys };
-let mouseX = 0;
-let mouseY = 0;
-let currentAngle = 0;
 let isSpacePressed = false;
 let spaceInterval = null;
 
@@ -101,9 +114,9 @@ class Particle {
 
 function spawnExplosion(x, y, colorHue) {
   const color = `hsl(${colorHue}, 100%, 60%)`;
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 24; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 6 + 2;
+    const speed = Math.random() * 8 + 2;
     particles.push(new Particle(
       x, y,
       Math.cos(angle) * speed, Math.sin(angle) * speed,
@@ -132,7 +145,6 @@ function spawnSparks(x, y, colorHue) {
 }
 
 function spawnThruster(x, y, angle, colorHue) {
-  // Spawn thruster particles opposite of direction angle
   const oppositeAngle = angle + Math.PI + (Math.random() * 0.4 - 0.2);
   const speed = Math.random() * 3 + 3;
   const color = `hsl(${colorHue}, 100%, 60%)`;
@@ -161,11 +173,11 @@ loginForm.addEventListener('submit', (e) => {
     const docEl = document.documentElement;
     if (docEl.requestFullscreen) {
       docEl.requestFullscreen().catch(err => console.log("Errore Fullscreen:", err));
-    } else if (docEl.mozRequestFullScreen) { // Firefox
+    } else if (docEl.mozRequestFullScreen) {
       docEl.mozRequestFullScreen();
-    } else if (docEl.webkitRequestFullscreen) { // Chrome, Safari, Opera
+    } else if (docEl.webkitRequestFullscreen) {
       docEl.webkitRequestFullscreen();
-    } else if (docEl.msRequestFullscreen) { // IE/Edge
+    } else if (docEl.msRequestFullscreen) {
       docEl.msRequestFullscreen();
     }
   }
@@ -182,12 +194,16 @@ socket.on('init', (data) => {
 socket.on('gameState', (state) => {
   currentPlayers = state.players;
   currentProjectiles = state.projectiles;
+  currentAsteroids = state.asteroids;
+  currentItems = state.items;
+  currentBombs = state.bombs;
 
   // Find local player
   const localPlayer = currentPlayers.find(p => p.id === localPlayerId);
   if (localPlayer) {
-    // Update local HUD
+    // Update local HUD progress bars
     healthBar.style.width = `${localPlayer.health}%`;
+    fuelBar.style.width = `${localPlayer.fuel}%`;
     scoreCounter.textContent = localPlayer.score;
 
     if (localPlayer.health <= 0) {
@@ -195,6 +211,35 @@ socket.on('gameState', (state) => {
     } else {
       respawnScreen.classList.add('hidden');
     }
+
+    // Power-up indicators display
+    if (localPlayer.shieldActive) {
+      badgeShield.classList.remove('hidden');
+    } else {
+      badgeShield.classList.add('hidden');
+    }
+
+    if (localPlayer.tripleActive) {
+      badgeTriple.classList.remove('hidden');
+    } else {
+      badgeTriple.classList.add('hidden');
+    }
+
+    if (localPlayer.bombsCount > 0) {
+      badgeBomb.classList.remove('hidden');
+      bombCountVal.textContent = localPlayer.bombsCount;
+    } else {
+      badgeBomb.classList.add('hidden');
+    }
+  }
+
+  // Handle Game Countdown Overlay
+  if (state.countdown !== null) {
+    countdownScreen.classList.remove('hidden');
+    countdownNumber.textContent = state.countdown;
+    countdownAnnouncement.innerHTML = `VINCITORE:<br><span style="color: #00f0ff;">${winnerName}</span>`;
+  } else {
+    countdownScreen.classList.add('hidden');
   }
 
   // Update Leaderboard
@@ -203,7 +248,6 @@ socket.on('gameState', (state) => {
 
 // Shot events
 socket.on('playerShot', (shot) => {
-  // Spark effect at the muzzle
   spawnSparks(shot.x, shot.y, shot.color);
 });
 
@@ -211,25 +255,67 @@ socket.on('playerShot', (shot) => {
 socket.on('hit', (hit) => {
   spawnSparks(hit.x, hit.y, hit.color);
   if (hit.playerId === localPlayerId) {
-    screenShake = 15; // Trigger screen shake
+    screenShake = 15;
   }
+});
+
+// Item collected effect
+socket.on('itemCollected', (data) => {
+  // Spawn sparkling flash at collection point
+  const collector = currentPlayers.find(p => p.id === data.playerId);
+  if (collector) {
+    let hue = 30; // Orange fuel
+    if (data.type === 'pw_shield') hue = 190; // Cyan
+    if (data.type === 'pw_triple') hue = 290; // Purple
+    if (data.type === 'pw_bomb') hue = 0; // Red
+    spawnSparks(collector.x, collector.y, hue);
+  }
+});
+
+// Bomb placed notification
+socket.on('bombPlaced', (bomb) => {
+  spawnSparks(bomb.x, bomb.y, bomb.color);
+});
+
+// Bomb explosion trigger
+socket.on('bombExploded', (data) => {
+  screenShake = 25;
+  // Large visual fire explosion
+  for (let i = 0; i < 40; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 8 + 3;
+    const dist = Math.random() * 50;
+    particles.push(new Particle(
+      data.x + Math.cos(angle) * dist,
+      data.y + Math.sin(angle) * dist,
+      Math.cos(angle) * speed,
+      Math.sin(angle) * speed,
+      `hsl(${data.color}, 100%, 55%)`,
+      Math.random() * 5 + 3,
+      1.5,
+      Math.random() * 0.04 + 0.02
+    ));
+  }
+});
+
+// Game Reset announcements
+socket.on('gameCountdownStart', (data) => {
+  winnerName = data.winnerName;
+  particles.length = 0; // Clear particles on reset
 });
 
 // Death events
 socket.on('playerKilled', (data) => {
-  // Find player death position to show explosion
   const victim = currentPlayers.find(p => p.id === data.victimId);
   if (victim) {
     spawnExplosion(victim.x, victim.y, victim.color);
   }
 
-  // Add kill feed item
   const msg = document.createElement('div');
   msg.className = 'kill-msg';
   msg.innerHTML = `<span class="killer">${data.killerName}</span> ha vaporizzato <span class="victim">${data.victimName}</span>`;
   killFeed.appendChild(msg);
 
-  // Auto clean killfeed item
   setTimeout(() => {
     msg.remove();
   }, 5000);
@@ -237,7 +323,6 @@ socket.on('playerKilled', (data) => {
 
 // Leaderboard updates
 function updateLeaderboard(players) {
-  // Sort players by score
   const sorted = [...players].sort((a, b) => b.score - a.score).slice(0, 10);
   
   leaderboardList.innerHTML = '';
@@ -266,12 +351,13 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Inputs tracking
+// Inputs tracking (Asteroids Style: Up/Down/Left/Right Arrows)
 window.addEventListener('keydown', (e) => {
   if (loginScreen.classList.contains('hidden') === false) return; // ignore before login
   
-  const key = e.key.toLowerCase();
-  if (['w', 'a', 's', 'd'].includes(key)) {
+  const key = e.key;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+    e.preventDefault();
     keys[key] = true;
     sendInputsIfNeeded();
   }
@@ -281,17 +367,20 @@ window.addEventListener('keydown', (e) => {
     if (!isSpacePressed) {
       isSpacePressed = true;
       socket.emit('shoot');
-      // Set up repeated shooting while holding Space
       spaceInterval = setInterval(() => {
         socket.emit('shoot');
       }, 100);
     }
   }
+
+  if (e.key === 'b' || e.key === 'B') {
+    socket.emit('placeBomb');
+  }
 });
 
 window.addEventListener('keyup', (e) => {
-  const key = e.key.toLowerCase();
-  if (['w', 'a', 's', 'd'].includes(key)) {
+  const key = e.key;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
     keys[key] = false;
     sendInputsIfNeeded();
   }
@@ -306,49 +395,50 @@ window.addEventListener('keyup', (e) => {
 });
 
 function sendInputsIfNeeded() {
-  // Only send if changes occurred
   if (
-    keys.w !== lastKeysState.w ||
-    keys.a !== lastKeysState.a ||
-    keys.s !== lastKeysState.s ||
-    keys.d !== lastKeysState.d
+    keys.ArrowUp !== lastKeysState.ArrowUp ||
+    keys.ArrowDown !== lastKeysState.ArrowDown ||
+    keys.ArrowLeft !== lastKeysState.ArrowLeft ||
+    keys.ArrowRight !== lastKeysState.ArrowRight
   ) {
     socket.emit('playerInput', keys);
     lastKeysState = { ...keys };
   }
 }
 
-// Track mouse position and send target angle to server
-window.addEventListener('mousemove', (e) => {
-  if (!localPlayerId) return;
-  
-  mouseX = e.clientX;
-  mouseY = e.clientY;
+// Draw Asteroid shape deterministically using its ID
+function drawAsteroidShape(ctx, ast) {
+  const points = 10;
+  ctx.beginPath();
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    // Seeded offset to keep asteroid shape stable
+    const offsetSeed = Math.sin(ast.id * 888 + i * 999) * 0.25 + 0.85;
+    const r = ast.radius * offsetSeed;
+    
+    const vertexX = ast.x + Math.cos(ast.angle + angle) * r;
+    const vertexY = ast.y + Math.sin(ast.angle + angle) * r;
 
-  // Target angle is calculated from center of canvas (the player) to the mouse cursor
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  
-  const angle = Math.atan2(mouseY - centerY, mouseX - centerX);
-  if (Math.abs(angle - currentAngle) > 0.05) {
-    currentAngle = angle;
-    socket.emit('playerAngle', angle);
+    if (i === 0) {
+      ctx.moveTo(vertexX - camera.x, vertexY - camera.y);
+    } else {
+      ctx.lineTo(vertexX - camera.x, vertexY - camera.y);
+    }
   }
-});
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
 
 // Render/Game Loop
 function render() {
   requestAnimationFrame(render);
 
-  // Clear Canvas with sleek cosmic background fade
   ctx.fillStyle = '#070712';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Find local player coordinates
   const localPlayer = currentPlayers.find(p => p.id === localPlayerId);
-  
   if (localPlayer) {
-    // Smooth camera scroll following local player
     camera.x = localPlayer.x - canvas.width / 2;
     camera.y = localPlayer.y - canvas.height / 2;
   }
@@ -358,20 +448,16 @@ function render() {
     const dx = (Math.random() - 0.5) * screenShake;
     const dy = (Math.random() - 0.5) * screenShake;
     ctx.translate(dx, dy);
-    screenShake *= 0.9; // decay
+    screenShake *= 0.9;
   }
 
   // 1. Draw starfield
   stars.forEach(star => {
-    // Parallax scrolling
     let relativeX = star.x - camera.x * 0.4;
     let relativeY = star.y - camera.y * 0.4;
-
-    // Wrap stars around map to keep background infinite
     relativeX = (relativeX % mapSize + mapSize) % mapSize;
     relativeY = (relativeY % mapSize + mapSize) % mapSize;
 
-    // Skip drawing if outside screen bounds
     if (relativeX < 0 || relativeX > canvas.width || relativeY < 0 || relativeY > canvas.height) return;
 
     ctx.fillStyle = star.color;
@@ -382,9 +468,9 @@ function render() {
 
   // 2. Draw Arena Grid Borders
   ctx.save();
-  ctx.strokeStyle = 'rgba(189, 0, 255, 0.15)';
+  ctx.strokeStyle = 'rgba(189, 0, 255, 0.1)';
   ctx.lineWidth = 1;
-  const gridSize = 100;
+  const gridSize = 120;
   const startX = Math.floor(camera.x / gridSize) * gridSize;
   const startY = Math.floor(camera.y / gridSize) * gridSize;
   
@@ -405,7 +491,7 @@ function render() {
     }
   }
   
-  // Arena Border Walls
+  // Arena Outer Walls
   ctx.strokeStyle = '#bd00ff';
   ctx.lineWidth = 6;
   ctx.shadowBlur = 15;
@@ -413,7 +499,47 @@ function render() {
   ctx.strokeRect(-camera.x, -camera.y, mapSize, mapSize);
   ctx.restore();
 
-  // 3. Update & Draw Local Particles
+  // 3. Collectibles / Items
+  currentItems.forEach(item => {
+    const rx = item.x - camera.x;
+    const ry = item.y - camera.y;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(rx, ry, item.radius, 0, Math.PI * 2);
+
+    let color = '#ffae00'; // fuel canister
+    let label = 'F';
+
+    if (item.type === 'pw_shield') {
+      color = '#00f0ff';
+      label = 'S';
+    } else if (item.type === 'pw_triple') {
+      color = '#bd00ff';
+      label = 'T';
+    } else if (item.type === 'pw_bomb') {
+      color = '#ff3131';
+      label = 'B';
+    }
+
+    ctx.fillStyle = 'rgba(10, 10, 20, 0.8)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = color;
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw inner symbol
+    ctx.font = 'bold 11px "Orbitron", sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, rx, ry);
+    ctx.restore();
+  });
+
+  // 4. Update & Draw Particles
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.update();
@@ -424,7 +550,34 @@ function render() {
     }
   }
 
-  // 4. Draw Projectiles
+  // 5. Draw Bombs
+  currentBombs.forEach(bomb => {
+    const bx = bomb.x - camera.x;
+    const by = bomb.y - camera.y;
+    
+    ctx.save();
+    // Pulse animation based on fuse timer
+    const pulse = 1 + Math.sin(bomb.timer * 0.25) * 0.15;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#ff3131';
+    ctx.fillStyle = bomb.timer < 30 ? (bomb.timer % 4 < 2 ? '#ffffff' : '#ff3131') : '#9e0000';
+    ctx.strokeStyle = '#ff3131';
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(bx, by, bomb.radius * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Small blinking spark on top of bomb
+    ctx.fillStyle = '#ffae00';
+    ctx.beginPath();
+    ctx.arc(bx, by - bomb.radius - 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // 6. Draw Projectiles
   currentProjectiles.forEach(proj => {
     ctx.save();
     ctx.shadowBlur = 10;
@@ -434,11 +587,10 @@ function render() {
     ctx.lineCap = 'round';
 
     ctx.beginPath();
-    // Draw trail
     const length = 20;
     const speed = Math.hypot(proj.vx, proj.vy);
-    const trailX = proj.x - (proj.vx / speed) * length;
-    const trailY = proj.y - (proj.vy / speed) * length;
+    const trailX = proj.x - (proj.vx / (speed || 1)) * length;
+    const trailY = proj.y - (proj.vy / (speed || 1)) * length;
 
     ctx.moveTo(proj.x - camera.x, proj.y - camera.y);
     ctx.lineTo(trailX - camera.x, trailY - camera.y);
@@ -446,46 +598,67 @@ function render() {
     ctx.restore();
   });
 
-  // 5. Draw Players
+  // 7. Draw Asteroids
+  currentAsteroids.forEach(ast => {
+    ctx.save();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(189, 0, 255, 0.4)';
+    ctx.strokeStyle = '#bd00ff';
+    ctx.lineWidth = 2.5;
+    ctx.fillStyle = '#110c22';
+
+    drawAsteroidShape(ctx, ast);
+    ctx.restore();
+  });
+
+  // 8. Draw Players
   currentPlayers.forEach(player => {
-    if (player.health <= 0) return; // Don't draw dead players
+    if (player.health <= 0) return;
 
     const shipX = player.x - camera.x;
     const shipY = player.y - camera.y;
 
-    // Draw Thruster tail trails if moving
-    if (Math.random() < 0.4) {
+    // Thruster visual particles
+    const speed = Math.hypot(player.vx, player.vy);
+    if (speed > 1 && Math.random() < 0.35) {
       spawnThruster(player.x, player.y, player.angle, player.color);
     }
 
+    // Active PWA Barrier / Shield Circle
+    if (player.shieldActive) {
+      ctx.save();
+      ctx.strokeStyle = '#00f0ff';
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#00f0ff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(shipX, shipY, PLAYER_RADIUS + 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Spacecraft Core
     ctx.save();
     ctx.translate(shipX, shipY);
 
-    // Dynamic neon glowing body
     ctx.shadowBlur = 12;
     ctx.shadowColor = `hsl(${player.color}, 100%, 50%)`;
     ctx.fillStyle = `hsl(${player.color}, 100%, 60%)`;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
 
-    // Draw custom Sci-Fi Starfighter geometry
     ctx.rotate(player.angle);
     ctx.beginPath();
-    // Center point tip
     ctx.moveTo(22, 0);
-    // Top-left wing
     ctx.lineTo(-14, -18);
-    // Back engine indent
     ctx.lineTo(-6, -6);
-    // Bottom engine indent
     ctx.lineTo(-6, 6);
-    // Bottom-right wing
     ctx.lineTo(-14, 18);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Small cockpit glass overlay
+    // Small cockpit glass
     ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     ctx.beginPath();
     ctx.moveTo(8, 0);
@@ -496,11 +669,10 @@ function render() {
 
     ctx.restore();
 
-    // 6. Draw Player Health bar + Name tag above ship
+    // 9. Health & Info labels
     ctx.save();
     const uiY = shipY - 35;
     
-    // Draw Name Tag
     ctx.font = 'bold 12px "Outfit", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffffff';
@@ -508,21 +680,16 @@ function render() {
     ctx.shadowColor = 'black';
     ctx.fillText(player.name, shipX, uiY - 8);
 
-    // Draw Health bar background
+    // Healthbar draw
     const barW = 40;
     const barH = 5;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(shipX - barW / 2, uiY, barW, barH);
 
-    // Draw Health bar fill
     const healthPercent = player.health / 100;
-    const barFillW = barW * healthPercent;
-    
-    // Smooth transition from Green to Yellow to Red depending on player health
     ctx.fillStyle = `hsl(${healthPercent * 120}, 100%, 50%)`;
-    ctx.fillRect(shipX - barW / 2, uiY, barFillW, barH);
+    ctx.fillRect(shipX - barW / 2, uiY, barW * healthPercent, barH);
     
-    // Border around healthbar
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 1;
     ctx.strokeRect(shipX - barW / 2, uiY, barW, barH);
@@ -530,11 +697,9 @@ function render() {
     ctx.restore();
   });
 
-  // Restore screen shake translation matrix
   if (screenShake > 0.1) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 }
 
-// Start Render loop
 requestAnimationFrame(render);

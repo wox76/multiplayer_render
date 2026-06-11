@@ -31,7 +31,7 @@
           <span class="logo-light">QUANTUM</span>
           <span class="logo-neon">ARENA</span>
         </div>
-        <p class="subtitle">Pilota la tua nave spaziale e combatti contro giocatori in tempo reale</p>
+        <p class="subtitle">Schiva gli asteroidi e sconfiggi gli altri piloti in tempo reale!</p>
         
         <form id="login-form">
           <div class="input-group">
@@ -45,24 +45,25 @@
         </form>
 
         <div class="controls-guide">
-          <h3>Comandi di Gioco:</h3>
+          <h3>Comandi di Gioco (Asteroids Style):</h3>
           <div class="keys">
             <div class="key-row">
-              <span class="key">W</span>
+              <span class="key">▲</span>
+              <span class="key-desc">Spinta in Avanti (Consuma Fuel)</span>
             </div>
             <div class="key-row">
-              <span class="key">A</span>
-              <span class="key">S</span>
-              <span class="key">D</span>
-              <span class="key-desc">Movimento</span>
+              <span class="key">◀</span>
+              <span class="key">▼</span>
+              <span class="key">▶</span>
+              <span class="key-desc">Rotazione Astronave / Freno</span>
             </div>
             <div class="key-row space-row">
               <span class="key spacekey">SPAZIO</span>
-              <span class="key-desc">Spara Proiettili</span>
+              <span class="key-desc">Fuoco Laser</span>
             </div>
-            <div class="key-row mouse-row">
-              <span class="mouse-icon">🖱️</span>
-              <span class="key-desc">Mira con il Cursore</span>
+            <div class="key-row space-row">
+              <span class="key">B</span>
+              <span class="key-desc">Rilascia Bomba (Richiede Power-up)</span>
             </div>
           </div>
         </div>
@@ -80,17 +81,34 @@
       <div class="player-header">
         <span id="hud-player-name" class="glow-text">Soldier</span>
       </div>
-      <div class="health-container">
-        <div class="health-label">INTEGRITÀ SCAFO</div>
-        <div class="health-bar-bg">
+      
+      <!-- Health Bar -->
+      <div class="hud-bar-container">
+        <div class="bar-label">INTEGRITÀ SCAFO</div>
+        <div class="bar-bg">
           <div id="health-bar" class="health-bar-fill"></div>
         </div>
+      </div>
+
+      <!-- Fuel Bar -->
+      <div class="hud-bar-container" style="margin-top: 10px;">
+        <div class="bar-label">CARBURANTE PROPULSORE</div>
+        <div class="bar-bg">
+          <div id="fuel-bar" class="fuel-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Active Powerups Badges -->
+      <div id="powerup-badges" class="badges-container">
+        <span id="badge-shield" class="badge hidden">🛡️ SCUDO ATTIVO</span>
+        <span id="badge-triple" class="badge hidden">⚡ SPARO A 3 VIE</span>
+        <span id="badge-bomb" class="badge hidden">💣 BOMBE: <span id="bomb-count-val">0</span></span>
       </div>
     </div>
 
     <!-- Top Right: Leaderboard -->
     <div class="hud-panel leaderboard-panel">
-      <div class="panel-header">CLASSIFICA</div>
+      <div class="panel-header">CLASSIFICA (ARRIVA A 10!)</div>
       <ol id="leaderboard-list">
         <!-- populated dynamically -->
       </ol>
@@ -99,7 +117,7 @@
     <!-- Bottom Left: Kills/Stats -->
     <div class="hud-panel stats-panel">
       <div class="stat-item">
-        <span class="stat-label">UCCISIONI:</span>
+        <span class="stat-label">PUNTEGGIO:</span>
         <span id="score-counter" class="stat-value text-neon">0</span>
       </div>
     </div>
@@ -113,6 +131,15 @@
         <h2 class="text-danger">NAVE DISTRUTTA!</h2>
         <p>Rigenerazione in corso...</p>
         <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Game Over / Reset Countdown overlay -->
+    <div id="countdown-screen" class="screen-overlay hidden">
+      <div class="countdown-card">
+        <h1 id="countdown-announcement" class="glow-text-victory">VINCITORE</h1>
+        <p class="subtitle">Il gioco si resetterà tra poco</p>
+        <div id="countdown-number" class="countdown-timer-value">3</div>
       </div>
     </div>
   </div>
