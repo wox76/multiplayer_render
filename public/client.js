@@ -528,15 +528,29 @@ function render() {
       label = 'BOMB';
     }
 
-    // Outer double neon pulse ring
-    const pulseRadius = item.radius + 6 + Math.sin(Date.now() * 0.008) * 3;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = color;
-    ctx.globalAlpha = 0.45;
+    // Outer low-vertex neon ring (Hexagon)
+    const sides = 6;
+    const pulseRadius = item.radius + 8 + Math.sin(Date.now() * 0.008) * 2.5;
+    const polyColor = item.type === 'fuel' ? '#ff7700' : '#39ff14'; // Orange for FUEL, Green for BONUS
+    const angleOffset = (item.id * 45 + Date.now() * 0.0012); // unique phase rotation
+
+    ctx.strokeStyle = polyColor;
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = polyColor;
+    ctx.globalAlpha = 0.8;
     ctx.beginPath();
-    ctx.arc(rx, ry, pulseRadius, 0, Math.PI * 2);
+    for (let s = 0; s < sides; s++) {
+      const angle = (s / sides) * Math.PI * 2 + angleOffset;
+      const px = rx + Math.cos(angle) * pulseRadius;
+      const py = ry + Math.sin(angle) * pulseRadius;
+      if (s === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.closePath();
     ctx.stroke();
     
     // Core item capsule
