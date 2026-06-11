@@ -368,6 +368,54 @@ setInterval(() => {
     ast.y = (ast.y % MAP_SIZE + MAP_SIZE) % MAP_SIZE;
   });
 
+  // Check Player-Asteroid Collisions
+  for (const pid in players) {
+    const player = players[pid];
+    if (player.health <= 0 || countdownState.active) continue;
+
+    for (let j = asteroids.length - 1; j >= 0; j--) {
+      const ast = asteroids[j];
+      const dist = Math.hypot(player.x - ast.x, player.y - ast.y);
+      if (dist < PLAYER_RADIUS + ast.radius) {
+        const isShielded = player.shieldUntil > now;
+        
+        if (!isShielded) {
+          // Player dies instantly!
+          player.health = 0;
+          handlePlayerDeath(player.id, 'asteroid');
+          
+          // Split/destroy asteroid as well
+          if (ast.size > 1) {
+            spawnAsteroid(ast.x, ast.y, ast.size - 1);
+            spawnAsteroid(ast.x, ast.y, ast.size - 1);
+          } else {
+            rollItemDrop(ast.x, ast.y);
+          }
+          
+          io.emit('hit', {
+            x: player.x,
+            y: player.y,
+            color: 280,
+            playerId: 'asteroid',
+            damage: 0
+          });
+          
+          asteroids.splice(j, 1);
+          break; // Break asteroid loop for this player
+        } else {
+          // If shielded, bounce player back slightly and push asteroid away
+          const angle = Math.atan2(player.y - ast.y, player.x - ast.x);
+          player.vx = Math.cos(angle) * 7;
+          player.vy = Math.sin(angle) * 7;
+          
+          // Push asteroid in opposite direction
+          ast.vx = -Math.cos(angle) * (5 - ast.size);
+          ast.vy = -Math.sin(angle) * (5 - ast.size);
+        }
+      }
+    }
+  }
+
   // 4. Update Bombs
   for (let i = bombs.length - 1; i >= 0; i--) {
     const bomb = bombs[i];
