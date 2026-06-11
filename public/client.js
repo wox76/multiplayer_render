@@ -33,6 +33,12 @@ const badgeTriple = document.getElementById('badge-triple');
 const badgeBomb = document.getElementById('badge-bomb');
 const bombCountVal = document.getElementById('bomb-count-val');
 
+// Mobile Controls Elements
+const joystickBoundary = document.getElementById('joystick-boundary');
+const joystickKnob = document.getElementById('joystick-knob');
+const mobileShootBtn = document.getElementById('mobile-shoot-btn');
+const mobileBombBtn = document.getElementById('mobile-bomb-btn');
+
 // Countdown Overlay
 const countdownScreen = document.getElementById('countdown-screen');
 const countdownAnnouncement = document.getElementById('countdown-announcement');
@@ -228,8 +234,10 @@ socket.on('gameState', (state) => {
     if (localPlayer.bombsCount > 0) {
       badgeBomb.classList.remove('hidden');
       bombCountVal.textContent = localPlayer.bombsCount;
+      mobileBombBtn.classList.remove('hidden');
     } else {
       badgeBomb.classList.add('hidden');
+      mobileBombBtn.classList.add('hidden');
     }
   }
 
@@ -703,3 +711,114 @@ function render() {
 }
 
 requestAnimationFrame(render);
+
+// --- Mobile Virtual Joystick & Touch Control Logic ---
+let joystickActive = false;
+let joystickStartPos = { x: 0, y: 0 };
+const maxJoystickDist = 45; // Max drift distance for joystick knob
+
+joystickBoundary.addEventListener('touchstart', (e) => {
+  joystickActive = true;
+  const touch = e.touches[0];
+  const rect = joystickBoundary.getBoundingClientRect();
+  joystickStartPos = {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2
+  };
+  handleJoystickMove(touch.clientX, touch.clientY);
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  if (!joystickActive) return;
+  const touch = e.touches[0];
+  handleJoystickMove(touch.clientX, touch.clientY);
+}, { passive: false });
+
+window.addEventListener('touchend', () => {
+  if (!joystickActive) return;
+  joystickActive = false;
+  
+  // Center knob
+  joystickKnob.style.transform = 'translate(0px, 0px)';
+  
+  // Reset emulated key states
+  keys.ArrowUp = false;
+  keys.ArrowLeft = false;
+  keys.ArrowRight = false;
+  sendInputsIfNeeded();
+});
+
+function handleJoystickMove(clientX, clientY) {
+  const dx = clientX - joystickStartPos.x;
+  const dy = clientY - joystickStartPos.y;
+  const dist = Math.hypot(dx, dy);
+  
+  const angle = Math.atan2(dy, dx);
+  const clampedDist = Math.min(dist, maxJoystickDist);
+  
+  // Move virtual knob UI
+  const knobX = Math.cos(angle) * clampedDist;
+  const knobY = Math.sin(angle) * clampedDist;
+  joystickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+  
+  // Input translation
+  if (clampedDist > 12) { // Deadzone
+    // Pushing joystick out triggers thrust (ArrowUp)
+    keys.ArrowUp = clampedDist > maxJoystickDist * 0.35;
+    
+    // Rotate ship to match joystick angle
+    if (localPlayerId) {
+      const player = currentPlayers.find(p => p.id === localPlayerId);
+      if (player) {
+        let diff = angle - player.angle;
+        // Normalize angle diff to (-PI, PI]
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        
+        const turnDeadzone = 0.18;
+        if (diff > turnDeadzone) {
+          keys.ArrowRight = true;
+          keys.ArrowLeft = false;
+        } else if (diff < -turnDeadzone) {
+          keys.ArrowLeft = true;
+          keys.ArrowRight = false;
+        } else {
+          keys.ArrowLeft = false;
+          keys.ArrowRight = false;
+        }
+      }
+    }
+  } else {
+    keys.ArrowUp = false;
+    keys.ArrowLeft = false;
+    keys.ArrowRight = false;
+  }
+  sendInputsIfNeeded();
+}
+
+// Mobile shoot button (continuous fire on hold)
+mobileShootBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if (!isSpacePressed) {
+    isSpacePressed = true;
+    socket.emit('shoot');
+    spaceInterval = setInterval(() => {
+      socket.emit('shoot');
+    }, 100);
+  }
+});
+
+mobileShootBtn.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  isSpacePressed = false;
+  if (spaceInterval) {
+    clearInterval(spaceInterval);
+    spaceInterval = null;
+  }
+});
+
+// Mobile bomb button
+mobileBombBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  socket.emit('placeBomb');
+});

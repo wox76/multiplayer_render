@@ -624,3 +624,89 @@ canvas {
     transform: rotate(360deg);
   }
 }
+
+/* Mobile Virtual Controls styling */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 1024px), (pointer: coarse) {
+  .mobile-only {
+    display: block;
+    pointer-events: auto;
+  }
+}
+
+#joystick-boundary {
+  position: absolute;
+  bottom: 45px;
+  left: 45px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(20, 20, 35, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  touch-action: none;
+  z-index: 99;
+}
+
+#joystick-knob {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  box-shadow: 0 0 12px var(--neon-cyan);
+  touch-action: none;
+}
+
+.mobile-action-buttons {
+  position: absolute;
+  bottom: 45px;
+  right: 45px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 99;
+}
+
+.mobile-btn {
+  border: none;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: none;
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+
+.mobile-btn:active {
+  transform: scale(0.9);
+}
+
+.shoot-btn {
+  width: 85px;
+  height: 85px;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+  font-size: 1.8rem;
+  box-shadow: 0 0 15px rgba(189, 0, 255, 0.4);
+}
+
+.bomb-btn {
+  width: 65px;
+  height: 65px;
+  background: linear-gradient(135deg, #ffae00, var(--neon-red));
+  font-size: 1.4rem;
+  box-shadow: 0 0 15px rgba(255, 49, 49, 0.4);
+}
+
+.bomb-btn.hidden {
+  display: none !important;
+}
