@@ -511,6 +511,7 @@ function render() {
   currentItems.forEach(item => {
     const rx = item.x - camera.x;
     const ry = item.y - camera.y;
+    const radius = item.radius || 24;
 
     ctx.save();
     
@@ -530,7 +531,7 @@ function render() {
 
     // Outer low-vertex neon ring (Hexagon)
     const sides = 6;
-    const pulseRadius = item.radius + 8 + Math.sin(Date.now() * 0.008) * 2.5;
+    const pulseRadius = radius + 8 + Math.sin(Date.now() * 0.008) * 2.5;
     const polyColor = item.type === 'fuel' ? '#ff7700' : '#39ff14'; // Orange for FUEL, Green for BONUS
     const angleOffset = (item.id * 45 + Date.now() * 0.0012); // unique phase rotation
 
@@ -559,7 +560,7 @@ function render() {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(rx, ry, item.radius, 0, Math.PI * 2);
+    ctx.arc(rx, ry, radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
@@ -569,7 +570,7 @@ function render() {
     ctx.shadowBlur = 30;
     ctx.shadowColor = color;
     ctx.beginPath();
-    ctx.arc(rx, ry, item.radius, 0, Math.PI * 2);
+    ctx.arc(rx, ry, radius, 0, Math.PI * 2);
     ctx.stroke();
 
     // Bold text inside the neon capsule

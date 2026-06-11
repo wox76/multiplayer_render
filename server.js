@@ -697,7 +697,8 @@ setInterval(() => {
       id: it.id,
       x: it.x,
       y: it.y,
-      type: it.type
+      type: it.type,
+      radius: it.radius
     })),
     bombs: bombs.map(b => ({
       id: b.id,
