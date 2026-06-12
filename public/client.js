@@ -47,7 +47,6 @@ const bombCountVal = document.getElementById('bomb-count-val');
 // Mobile Controls Elements
 const joystickBoundary = document.getElementById('joystick-boundary');
 const joystickKnob = document.getElementById('joystick-knob');
-const mobileShootBtn = document.getElementById('mobile-shoot-btn');
 const mobileBombBtn = document.getElementById('mobile-bomb-btn');
 
 // Countdown Overlay
@@ -766,38 +765,118 @@ requestAnimationFrame(render);
 // --- Mobile Virtual Joystick & Touch Control Logic ---
 let joystickActive = false;
 let joystickStartPos = { x: 0, y: 0 };
+let joystickTouchId = null;
+let shootTouchId = null;
 const maxJoystickDist = 45; // Max drift distance for joystick knob
 
-joystickBoundary.addEventListener('touchstart', (e) => {
-  joystickActive = true;
-  const touch = e.touches[0];
-  const rect = joystickBoundary.getBoundingClientRect();
-  joystickStartPos = {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2
-  };
-  handleJoystickMove(touch.clientX, touch.clientY);
-}, { passive: true });
+// Hide joystick by default at start
+if (joystickBoundary) {
+  joystickBoundary.style.display = 'none';
+}
 
-window.addEventListener('touchmove', (e) => {
-  if (!joystickActive) return;
-  const touch = e.touches[0];
-  handleJoystickMove(touch.clientX, touch.clientY);
+window.addEventListener('touchstart', (e) => {
+  if (loginScreen.classList.contains('hidden') === false) return; // ignore before login
+
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    
+    // Check if touch is on the bomb button
+    if (touch.target.id === 'mobile-bomb-btn' || touch.target.closest('#mobile-bomb-btn')) {
+      e.preventDefault();
+      if (!mobileBombBtn.disabled) {
+        socket.emit('placeBomb');
+      }
+      continue;
+    }
+
+    const halfWidth = window.innerWidth / 2;
+    
+    if (touch.clientX < halfWidth) {
+      // Left half: Joystick
+      if (joystickTouchId !== null) continue; // Only one joystick touch
+      
+      e.preventDefault();
+      joystickTouchId = touch.identifier;
+      joystickActive = true;
+      
+      // Position and show the joystick boundary at touch start
+      joystickBoundary.style.display = 'block';
+      joystickBoundary.style.position = 'absolute';
+      joystickBoundary.style.left = `${touch.clientX - 65}px`;
+      joystickBoundary.style.top = `${touch.clientY - 65}px`;
+      joystickBoundary.style.bottom = 'auto'; // override CSS bottom
+      
+      joystickStartPos = { x: touch.clientX, y: touch.clientY };
+      joystickKnob.style.transform = 'translate(0px, 0px)';
+      
+      handleJoystickMove(touch.clientX, touch.clientY);
+    } else {
+      // Right half: Shoot
+      if (shootTouchId !== null) continue; // Only one shoot touch
+      
+      e.preventDefault();
+      shootTouchId = touch.identifier;
+      
+      if (!isSpacePressed) {
+        isSpacePressed = true;
+        socket.emit('shoot');
+        spaceInterval = setInterval(() => {
+          socket.emit('shoot');
+        }, 100);
+      }
+    }
+  }
 }, { passive: false });
 
-window.addEventListener('touchend', () => {
-  if (!joystickActive) return;
-  joystickActive = false;
-  
-  // Center knob
-  joystickKnob.style.transform = 'translate(0px, 0px)';
-  
-  // Reset emulated key states
-  keys.ArrowUp = false;
-  keys.ArrowLeft = false;
-  keys.ArrowRight = false;
-  sendInputsIfNeeded();
-});
+window.addEventListener('touchmove', (e) => {
+  if (loginScreen.classList.contains('hidden') === false) return;
+
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    
+    if (joystickActive && touch.identifier === joystickTouchId) {
+      e.preventDefault();
+      handleJoystickMove(touch.clientX, touch.clientY);
+    }
+  }
+}, { passive: false });
+
+function handleTouchEnd(e) {
+  if (loginScreen.classList.contains('hidden') === false) return;
+
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    
+    if (touch.identifier === joystickTouchId) {
+      e.preventDefault();
+      joystickActive = false;
+      joystickTouchId = null;
+      
+      // Hide the joystick boundary
+      joystickBoundary.style.display = 'none';
+      joystickKnob.style.transform = 'translate(0px, 0px)';
+      
+      // Reset emulated key states
+      keys.ArrowUp = false;
+      keys.ArrowLeft = false;
+      keys.ArrowRight = false;
+      sendInputsIfNeeded();
+    }
+    
+    if (touch.identifier === shootTouchId) {
+      e.preventDefault();
+      shootTouchId = null;
+      isSpacePressed = false;
+      if (spaceInterval) {
+        clearInterval(spaceInterval);
+        spaceInterval = null;
+      }
+    }
+  }
+}
+
+window.addEventListener('touchend', handleTouchEnd, { passive: false });
+window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
 function handleJoystickMove(clientX, clientY) {
   const dx = clientX - joystickStartPos.x;
@@ -846,30 +925,3 @@ function handleJoystickMove(clientX, clientY) {
   }
   sendInputsIfNeeded();
 }
-
-// Mobile shoot button (continuous fire on hold)
-mobileShootBtn.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  if (!isSpacePressed) {
-    isSpacePressed = true;
-    socket.emit('shoot');
-    spaceInterval = setInterval(() => {
-      socket.emit('shoot');
-    }, 100);
-  }
-});
-
-mobileShootBtn.addEventListener('touchend', (e) => {
-  e.preventDefault();
-  isSpacePressed = false;
-  if (spaceInterval) {
-    clearInterval(spaceInterval);
-    spaceInterval = null;
-  }
-});
-
-// Mobile bomb button
-mobileBombBtn.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  socket.emit('placeBomb');
-});
