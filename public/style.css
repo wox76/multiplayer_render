@@ -637,8 +637,8 @@ body.is-mobile .mobile-only {
 
 #joystick-boundary {
   position: absolute;
-  bottom: 45px;
-  left: 45px;
+  bottom: 20px;
+  left: 20px;
   width: 130px;
   height: 130px;
   border-radius: 50%;
@@ -664,11 +664,11 @@ body.is-mobile .mobile-only {
 
 .mobile-action-buttons {
   position: absolute;
-  bottom: 45px;
-  right: 45px;
+  bottom: 20px;
+  right: 20px;
   display: flex;
   align-items: flex-end;
-  gap: 15px;
+  gap: 12px;
   z-index: 99;
 }
 
@@ -681,7 +681,7 @@ body.is-mobile .mobile-only {
   justify-content: center;
   cursor: pointer;
   touch-action: none;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, opacity 0.3s ease, filter 0.3s ease;
   user-select: none;
 }
 
@@ -690,23 +690,25 @@ body.is-mobile .mobile-only {
 }
 
 .shoot-btn {
-  width: 85px;
-  height: 85px;
+  width: 70px;
+  height: 70px;
   background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   box-shadow: 0 0 15px rgba(189, 0, 255, 0.4);
 }
 
 .bomb-btn {
-  width: 65px;
-  height: 65px;
+  width: 55px;
+  height: 55px;
   background: linear-gradient(135deg, #ffae00, var(--neon-red));
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   box-shadow: 0 0 15px rgba(255, 49, 49, 0.4);
 }
 
-.bomb-btn.hidden {
-  display: none !important;
+.bomb-btn.disabled {
+  opacity: 0.3;
+  filter: grayscale(0.85);
+  pointer-events: none;
 }
 
 /* Mobile responsive styles for HUD to avoid overlaps */

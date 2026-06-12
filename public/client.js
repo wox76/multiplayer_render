@@ -245,10 +245,12 @@ socket.on('gameState', (state) => {
     if (localPlayer.bombsCount > 0) {
       badgeBomb.classList.remove('hidden');
       bombCountVal.textContent = localPlayer.bombsCount;
-      mobileBombBtn.classList.remove('hidden');
+      mobileBombBtn.classList.remove('disabled');
+      mobileBombBtn.disabled = false;
     } else {
       badgeBomb.classList.add('hidden');
-      mobileBombBtn.classList.add('hidden');
+      mobileBombBtn.classList.add('disabled');
+      mobileBombBtn.disabled = true;
     }
   }
 
