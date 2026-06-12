@@ -7,6 +7,14 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Mobile and tablet detection (Android, iPhone, iPad, tablets)
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent));
+
+if (isMobileDevice) {
+  document.body.classList.add('is-mobile');
+}
+
 // Socket connection
 const socket = io();
 

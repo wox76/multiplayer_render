@@ -630,11 +630,9 @@ canvas {
   display: none;
 }
 
-@media (max-width: 1024px), (pointer: coarse) {
-  .mobile-only {
-    display: block;
-    pointer-events: auto;
-  }
+body.is-mobile .mobile-only {
+  display: block;
+  pointer-events: auto;
 }
 
 #joystick-boundary {
@@ -669,8 +667,8 @@ canvas {
   bottom: 45px;
   right: 45px;
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-end;
+  gap: 15px;
   z-index: 99;
 }
 
