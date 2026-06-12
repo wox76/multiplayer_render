@@ -9,7 +9,10 @@ if ('serviceWorker' in navigator) {
 
 // Mobile and tablet detection (Android, iPhone, iPad, tablets)
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent));
+  || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent))
+  || ('ontouchstart' in window)
+  || (navigator.maxTouchPoints > 0)
+  || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 
 if (isMobileDevice) {
   document.body.classList.add('is-mobile');

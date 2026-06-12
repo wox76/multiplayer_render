@@ -708,3 +708,101 @@ body.is-mobile .mobile-only {
 .bomb-btn.hidden {
   display: none !important;
 }
+
+/* Mobile responsive styles for HUD to avoid overlaps */
+@media (max-width: 768px), body.is-mobile {
+  .hud-panel {
+    background: rgba(10, 10, 20, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* 1. Player Status Panel - top-left, scaled down */
+  .player-panel {
+    top: 10px;
+    left: 10px;
+    width: 170px;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  .player-header {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+  .hud-bar-container {
+    margin-top: 6px !important;
+  }
+  .bar-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.5px;
+  }
+  .bar-bg {
+    height: 6px;
+  }
+  .badges-container {
+    margin-top: 8px;
+    gap: 4px;
+  }
+  .badge {
+    font-size: 0.55rem;
+    padding: 3px 6px;
+  }
+
+  /* 2. Leaderboard Panel - top-right, scaled down */
+  .leaderboard-panel {
+    top: 10px;
+    right: 10px;
+    width: 160px;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  .panel-header {
+    font-size: 0.7rem;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+  #leaderboard-list {
+    font-size: 0.7rem;
+    gap: 4px;
+  }
+  #leaderboard-list li {
+    padding: 2px;
+  }
+  #leaderboard-list li .player-name-lbl {
+    max-width: 85px;
+  }
+  /* Show only top 3 on mobile to save space */
+  #leaderboard-list li:nth-child(n+4) {
+    display: none;
+  }
+
+  /* 3. Stats Panel - Move to top center to avoid joystick overlap */
+  .stats-panel {
+    top: 10px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    border-radius: 8px;
+    width: auto;
+  }
+  .stat-item {
+    font-size: 0.75rem;
+    gap: 6px;
+  }
+
+  /* 4. Kill notification feed - move to left, below player status panel */
+  #kill-feed {
+    top: 130px;
+    bottom: auto;
+    left: 10px;
+    right: auto;
+    align-items: flex-start;
+  }
+  .kill-msg {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    border-right: none;
+    border-left: 3px solid var(--neon-purple);
+  }
+}
