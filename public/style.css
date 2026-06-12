@@ -721,57 +721,60 @@ body.is-mobile .mobile-only {
 
   /* 1. Player Status Panel - top-left, scaled down */
   .player-panel {
-    top: 10px;
-    left: 10px;
-    width: 170px;
-    padding: 10px;
-    border-radius: 8px;
+    top: 8px;
+    left: 8px;
+    width: 135px;
+    padding: 6px 8px;
+    border-radius: 6px;
   }
   .player-header {
-    font-size: 0.85rem;
-    margin-bottom: 6px;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
   }
   .hud-bar-container {
-    margin-top: 6px !important;
+    margin-top: 4px !important;
+    gap: 1px;
   }
   .bar-label {
-    font-size: 0.55rem;
-    letter-spacing: 0.5px;
+    font-size: 0.5rem;
+    letter-spacing: 0.2px;
   }
   .bar-bg {
-    height: 6px;
+    height: 4px;
+    border-radius: 2px;
   }
   .badges-container {
-    margin-top: 8px;
-    gap: 4px;
+    margin-top: 6px;
+    gap: 3px;
   }
   .badge {
-    font-size: 0.55rem;
-    padding: 3px 6px;
+    font-size: 0.5rem;
+    padding: 2px 4px;
+    border-radius: 2px;
   }
 
   /* 2. Leaderboard Panel - top-right, scaled down */
   .leaderboard-panel {
-    top: 10px;
-    right: 10px;
-    width: 160px;
-    padding: 10px;
-    border-radius: 8px;
+    top: 8px;
+    right: 8px;
+    width: 130px;
+    padding: 6px 8px;
+    border-radius: 6px;
   }
   .panel-header {
-    font-size: 0.7rem;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
+    font-size: 0.65rem;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
   }
   #leaderboard-list {
-    font-size: 0.7rem;
-    gap: 4px;
+    font-size: 0.65rem;
+    gap: 2px;
   }
   #leaderboard-list li {
-    padding: 2px;
+    padding: 1px 2px;
   }
   #leaderboard-list li .player-name-lbl {
-    max-width: 85px;
+    max-width: 70px;
   }
   /* Show only top 3 on mobile to save space */
   #leaderboard-list li:nth-child(n+4) {
@@ -780,31 +783,33 @@ body.is-mobile .mobile-only {
 
   /* 3. Stats Panel - Move to top center to avoid joystick overlap */
   .stats-panel {
-    top: 10px;
+    top: 8px;
     bottom: auto;
     left: 50%;
     transform: translateX(-50%);
-    padding: 6px 14px;
-    border-radius: 8px;
+    padding: 4px 10px;
+    border-radius: 6px;
     width: auto;
   }
   .stat-item {
-    font-size: 0.75rem;
-    gap: 6px;
+    font-size: 0.65rem;
+    gap: 4px;
   }
 
   /* 4. Kill notification feed - move to left, below player status panel */
   #kill-feed {
-    top: 130px;
+    top: 100px;
     bottom: auto;
-    left: 10px;
+    left: 8px;
     right: auto;
     align-items: flex-start;
+    gap: 4px;
   }
   .kill-msg {
-    padding: 6px 12px;
-    font-size: 0.7rem;
+    padding: 4px 8px;
+    font-size: 0.65rem;
     border-right: none;
-    border-left: 3px solid var(--neon-purple);
+    border-left: 2px solid var(--neon-purple);
+    border-radius: 4px;
   }
 }
