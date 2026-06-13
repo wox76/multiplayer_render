@@ -41,7 +41,7 @@ const ROTATION_SPEED = 0.065; // radians per tick
 const ACCELERATION = 0.22;
 const FRICTION = 0.985;
 const MAX_SPEED = 10;
-const FUEL_DECAY = 0.25; // fuel consumed per tick when thrusting
+const FUEL_DECAY = 0.12; // fuel consumed per tick when thrusting
 
 let countdownState = {
   active: false,

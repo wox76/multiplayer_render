@@ -259,6 +259,30 @@ canvas {
   font-size: 1rem;
 }
 
+/* Mobile Guide Styles on desktop */
+.mobile-keys-guide {
+  margin-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+  text-align: left;
+}
+
+.mobile-guide-title {
+  font-size: 0.95rem;
+  font-family: var(--font-title);
+  color: var(--neon-cyan);
+  margin-bottom: 8px;
+}
+
+.mobile-guide-list {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* In-game HUD */
 #hud {
   position: absolute;
@@ -811,5 +835,57 @@ body.is-mobile .mobile-only {
     border-right: none;
     border-left: 2px solid var(--neon-purple);
     border-radius: 4px;
+  }
+
+  /* Responsive styles for login screen and instructions to prevent overflow */
+  .login-card {
+    padding: 24px 16px;
+    width: 90vw;
+    max-width: 360px;
+  }
+  .logo {
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+  }
+  .input-group {
+    margin-bottom: 16px;
+  }
+  #username-input {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+  .btn-glow {
+    padding: 11px;
+    font-size: 0.9rem;
+  }
+  .controls-guide {
+    margin-top: 20px;
+    padding-top: 12px;
+  }
+  
+  /* Hide keyboard layout controls on mobile screen to prevent overflow */
+  .controls-guide h3:first-of-type,
+  .controls-guide .keys {
+    display: none;
+  }
+  
+  /* Style mobile instructions to be more compact and smaller */
+  .mobile-keys-guide {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+  }
+  .mobile-guide-title {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+  .mobile-guide-list {
+    font-size: 0.7rem;
+    line-height: 1.35;
+    gap: 4px;
   }
 }
